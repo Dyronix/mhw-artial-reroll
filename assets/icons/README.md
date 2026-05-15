@@ -27,3 +27,26 @@ Downloaded weapon type icons are stored in `weapons/`:
 - `long_sword.jpeg`
 - `switch_axe.jpeg`
 - `sword_and_shield.jpeg`
+
+## Element Icons
+
+Source page: https://game8.co/games/Monster-Hunter-Wilds/archives/498571
+
+Downloaded element icons are stored in `elements/`:
+
+- `dragon.png`
+- `fire.png`
+- `ice.png`
+- `thunder.png`
+- `water.png`
+
+## Ailment Icons
+
+Source page: https://game8.co/games/Monster-Hunter-Wilds/archives/498571
+
+Downloaded ailment icons are stored in `ailments/`:
+
+- `blast.png`
+- `paralysis.png`
+- `poison.png`
+- `sleep.png`
