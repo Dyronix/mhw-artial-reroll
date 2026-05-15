@@ -50,3 +50,19 @@ Downloaded ailment icons are stored in `ailments/`:
 - `paralysis.png`
 - `poison.png`
 - `sleep.png`
+
+## Group Skill Icon
+
+Source page: https://game8.co/games/Monster-Hunter-Wilds/archives/482547
+
+Downloaded group skill icon is stored in `group_skills/`:
+
+- `group_skill.png`
+
+## Set Bonus Skill Icon
+
+Source page: https://game8.co/games/Monster-Hunter-Wilds/archives/482548
+
+Downloaded set bonus skill icon is stored in `set_bonus_skills/`:
+
+- `set_bonus_skill.png`
