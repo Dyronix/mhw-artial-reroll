@@ -1,0 +1,19 @@
+[
+  { "name": "Master Mounter", "source": "Scaling Prowess", "description": "Improves mounting and mounted wound creation." },
+  { "name": "Fortify", "source": "Fortifying Pelt", "description": "Raises attack and defense after fainting, up to two times." },
+  { "name": "Hunter Gatherer", "source": "Flexible Leathercraft", "description": "Speeds up gathering and helps prevent gathering or carving knockback." },
+  { "name": "Honey Hunter", "source": "Neopteron Alert", "description": "Increases honey obtained from gathering points." },
+  { "name": "Inspiration", "source": "Lord's Favor", "description": "Temporarily boosts attack when companion-affecting effects apply nearby." },
+  { "name": "Wylk Burst", "source": "Guardian's Pulse", "description": "Improves stamina and red-gauge recovery near Wylkrystals." },
+  { "name": "Fleetfoot", "source": "Neopteron Camouflage", "description": "Improves crouch movement and monster detection escape." },
+  { "name": "Affinity Sliding", "source": "Buttery Leathercraft", "description": "Temporarily increases affinity after sliding." },
+  { "name": "Adrenaline", "source": "Scale Layering", "description": "Temporarily reduces stamina use at low health." },
+  { "name": "Diversion", "source": "Alluring Pelt", "description": "Draws more monster attention while attacking." },
+  { "name": "Resuscitate", "source": "Lord's Fury", "description": "Raises attack while affected by ailments." },
+  { "name": "Ward of Wyveria", "source": "Guardian's Protection", "description": "Reduces elemental and unique damage in the Ruins of Wyveria." },
+  { "name": "Forager's Luck", "source": "Imparted Wisdom", "description": "Improves chances to find rare gathering points." },
+  { "name": "Luck", "source": "Glory's Favor", "description": "Increases quest target rewards." },
+  { "name": "Carving Master", "source": "Festival Spirit", "description": "Grants one additional carve from carcasses during quests." },
+  { "name": "Guts (Tenacity)", "source": "Lord's Soul", "description": "Boosts attack, lowers defense, and can prevent one lethal hit before shifting to defense and resistance." },
+  { "name": "Satsui no Hado", "source": "Master of the Fist", "description": "Improves special actions and offset-related Drive Impact effects." }
+]

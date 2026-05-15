@@ -1,0 +1,16 @@
+[
+  { "name": "Great Sword", "description": "Slow, heavy melee weapon focused on charged high-damage hits." },
+  { "name": "Long Sword", "description": "Mobile melee weapon with long reach and spirit gauge attacks." },
+  { "name": "Sword & Shield", "description": "Versatile weapon with quick movement, guarding, and item access." },
+  { "name": "Dual Blades", "description": "Fast weapon with rapid attacks and strong elemental pressure." },
+  { "name": "Hammer", "description": "Blunt weapon that can stun monsters and charge powerful attacks." },
+  { "name": "Hunting Horn", "description": "Blunt support weapon that attacks while applying melody effects." },
+  { "name": "Lance", "description": "Defensive weapon with a strong shield, thrusts, and counters." },
+  { "name": "Gunlance", "description": "Shielded lance weapon with shelling and explosive attacks." },
+  { "name": "Switch Axe", "description": "Morphing weapon that swaps between axe reach and sword aggression." },
+  { "name": "Charge Blade", "description": "Morphing weapon that builds phials in sword mode and spends them in axe mode." },
+  { "name": "Insect Glaive", "description": "Aerial weapon that uses a Kinsect to gather extracts for buffs." },
+  { "name": "Light Bowgun", "description": "Mobile ranged weapon using ammo and rapid-fire pressure." },
+  { "name": "Heavy Bowgun", "description": "Ranged weapon with high firepower and lower mobility." },
+  { "name": "Bow", "description": "Mobile ranged weapon using charged arrow shots and coatings." }
+]
