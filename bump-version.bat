@@ -111,8 +111,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
     "$tuple = '(' + $parts[0] + ', ' + $parts[1] + ', ' + $parts[2] + ', 0)';" ^
     "$vi = $vi -replace 'filevers=\([0-9]+, [0-9]+, [0-9]+, 0\)', ('filevers=' + $tuple);" ^
     "$vi = $vi -replace 'prodvers=\([0-9]+, [0-9]+, [0-9]+, 0\)', ('prodvers=' + $tuple);" ^
-    "$vi = $vi -replace ""StringStruct\('FileVersion', '[^']+'\)"", (""StringStruct('FileVersion', '"" + $version + ""')"");" ^
-    "$vi = $vi -replace ""StringStruct\('ProductVersion', '[^']+'\)"", (""StringStruct('ProductVersion', '"" + $version + ""')"");" ^
+    "$vi = $vi -replace 'StringStruct\(''FileVersion'', ''[^'']+''\)', ('StringStruct(''FileVersion'', ''' + $version + ''')');" ^
+    "$vi = $vi -replace 'StringStruct\(''ProductVersion'', ''[^'']+''\)', ('StringStruct(''ProductVersion'', ''' + $version + ''')');" ^
     "Set-Content 'packaging/version_info.txt' $vi -NoNewline -Encoding ASCII;"
 if errorlevel 1 (
     echo Failed to update version files.
