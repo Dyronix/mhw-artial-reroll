@@ -10,9 +10,14 @@ def advance_all(state: AppState, action: str = "Advanced all rolls") -> None:
         weapon.current_index += 1
 
 
-def add_weapon_after_craft(state: AppState, weapon_type: str, attribute: str) -> TrackedWeapon:
+def add_weapon_after_craft(
+    state: AppState,
+    weapon_type: str,
+    attribute: str,
+    nickname: str = "",
+) -> TrackedWeapon:
     advance_all(state, action="Created weapon")
-    weapon = TrackedWeapon(weapon_type=weapon_type, attribute=attribute)
+    weapon = TrackedWeapon(weapon_type=weapon_type, attribute=attribute, nickname=nickname)
     state.tracked_weapons.append(weapon)
     return weapon
 

@@ -48,14 +48,22 @@ class TargetRule:
 class TrackedWeapon:
     weapon_type: str
     attribute: str
+    nickname: str = ""
     current_index: int = 0
     rolls: list[RollResult] = field(default_factory=list)
     target_rules: list[TargetRule] = field(default_factory=list)
     id: str = field(default_factory=lambda: uuid4().hex)
 
     @property
-    def display_name(self) -> str:
+    def base_name(self) -> str:
         return f"{self.weapon_type} / {self.attribute}"
+
+    @property
+    def display_name(self) -> str:
+        name = self.nickname.strip()
+        if name:
+            return f"{name} ({self.base_name})"
+        return self.base_name
 
 
 @dataclass
@@ -110,6 +118,7 @@ def weapon_from_dict(data: dict[str, Any]) -> TrackedWeapon:
         id=str(data.get("id") or uuid4().hex),
         weapon_type=str(data.get("weapon_type", "")),
         attribute=str(data.get("attribute", "")),
+        nickname=str(data.get("nickname", "") or "").strip(),
         current_index=max(0, int(data.get("current_index", 0) or 0)),
         rolls=rolls,
         target_rules=_clean_target_rule_list(data.get("target_rules", [])),
@@ -161,6 +170,26 @@ def state_from_dict(data: dict[str, Any]) -> AppState:
 
 def state_to_dict(state: AppState) -> dict[str, Any]:
     return asdict(state)
+
+
+def weapon_display_name(state: AppState, weapon: TrackedWeapon) -> str:
+    name = weapon.nickname.strip()
+    if name:
+        return f"{name} ({weapon.base_name})"
+
+    matching = [
+        item
+        for item in state.tracked_weapons
+        if item.weapon_type == weapon.weapon_type and item.attribute == weapon.attribute
+    ]
+    if len(matching) <= 1:
+        return weapon.base_name
+
+    try:
+        position = next(index for index, item in enumerate(matching, start=1) if item.id == weapon.id)
+    except StopIteration:
+        return weapon.base_name
+    return f"{weapon.base_name} #{position}"
 
 
 def _clean_skill(value: Any) -> str:

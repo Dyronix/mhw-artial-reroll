@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QFormLayout,
     QLabel,
+    QLineEdit,
     QVBoxLayout,
 )
 
@@ -22,10 +23,13 @@ class CreateWeaponDialog(QDialog):
 
         self.attribute = QComboBox()
         self.attribute.addItems(config.attributes)
+        self.nickname = QLineEdit()
+        self.nickname.setPlaceholderText("Optional row name")
 
         form = QFormLayout()
         form.addRow("Weapon Type", self.weapon_type)
         form.addRow("Attribute", self.attribute)
+        form.addRow("Name", self.nickname)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(self.accept)
@@ -47,3 +51,6 @@ class CreateWeaponDialog(QDialog):
 
     def selected_attribute(self) -> str:
         return self.attribute.currentText()
+
+    def selected_nickname(self) -> str:
+        return self.nickname.text().strip()

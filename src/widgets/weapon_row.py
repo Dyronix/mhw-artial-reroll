@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QSize, Signal
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QToolButton, QVBoxLayout
+from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QToolButton, QVBoxLayout
 
 from app.font_awesome import font_awesome_icon
 from data.models import AppConfig, TrackedWeapon
@@ -11,18 +11,28 @@ from widgets.roll_strip import RollStrip
 
 class WeaponRow(QFrame):
     edit_requested = Signal(str)
+    rename_requested = Signal(str, str)
     targets_requested = Signal(str)
     clear_requested = Signal(str)
     delete_requested = Signal(str)
 
-    def __init__(self, weapon: TrackedWeapon, config: AppConfig, parent=None) -> None:
+    def __init__(self, weapon: TrackedWeapon, config: AppConfig, title: str, parent=None) -> None:
         super().__init__(parent)
         self.weapon = weapon
         self.config = config
+        self.title_text = title
+        self._rename_in_progress = False
         self.setProperty("frameRole", "card")
 
-        self.title = QLabel(weapon.display_name)
+        self.title = QLabel(title)
         self.title.setProperty("role", "section")
+        self.title.setCursor(Qt.IBeamCursor)
+        self.title.mouseDoubleClickEvent = self._start_rename
+        self.title.setToolTip("Double-click to rename this weapon row")
+        self.title_editor = QLineEdit()
+        self.title_editor.setVisible(False)
+        self.title_editor.returnPressed.connect(self._commit_rename)
+        self.title_editor.editingFinished.connect(self._finish_rename)
         self.index_label = QLabel()
         self.index_label.setProperty("role", "muted")
         self.targets_label = QLabel()
@@ -47,6 +57,7 @@ class WeaponRow(QFrame):
 
         top = QGridLayout()
         top.addWidget(self.title, 0, 0)
+        top.addWidget(self.title_editor, 0, 0)
         top.addWidget(self.index_label, 1, 0)
         top.addWidget(self.targets_label, 2, 0)
         top.addLayout(actions, 0, 1, 3, 1)
@@ -60,10 +71,34 @@ class WeaponRow(QFrame):
         self.refresh()
 
     def refresh(self) -> None:
-        self.title.setText(self.weapon.display_name)
+        self.title.setText(self.title_text)
         self.index_label.setText(f"Current roll index: {self.weapon.current_index + 1}")
         self.targets_label.setText(target_summary(self.weapon))
         self.strip.set_weapon(self.weapon, self.config)
+
+    def _start_rename(self, event) -> None:
+        del event
+        self._rename_in_progress = True
+        self.title_editor.setText(self.weapon.nickname.strip())
+        self.title.setVisible(False)
+        self.title_editor.setVisible(True)
+        self.title_editor.setFocus()
+        self.title_editor.selectAll()
+
+    def _commit_rename(self) -> None:
+        if not self._rename_in_progress:
+            return
+        self._rename_in_progress = False
+        self.rename_requested.emit(self.weapon.id, self.title_editor.text().strip())
+        self.title_editor.setVisible(False)
+        self.title.setVisible(True)
+
+    def _finish_rename(self) -> None:
+        if self.title_editor.isVisible() and self._rename_in_progress:
+            self._rename_in_progress = False
+            self.rename_requested.emit(self.weapon.id, self.title_editor.text().strip())
+            self.title_editor.setVisible(False)
+            self.title.setVisible(True)
 
 
 def _icon_button(icon_name: str, label: str) -> QToolButton:

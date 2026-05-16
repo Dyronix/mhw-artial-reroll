@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QVBoxLayout
 
-from data.models import AppState, RollResult
+from data.models import AppState, RollResult, weapon_display_name
 from services.rolls import current_roll, next_roll
 
 
@@ -42,7 +42,7 @@ class CurrentRollsPanel(QFrame):
             grid.setContentsMargins(0, 6, 0, 6)
             grid.setHorizontalSpacing(12)
             grid.setVerticalSpacing(4)
-            name = QLabel(weapon.display_name)
+            name = QLabel(weapon_display_name(state, weapon))
             name.setStyleSheet("background: transparent; font-weight: 700;")
             grid.addWidget(name, 0, 0, 1, 2)
             grid.addWidget(QLabel(f"Current #{weapon.current_index + 1}"), 1, 0)

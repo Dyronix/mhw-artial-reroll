@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QDialog,
 )
 
-from data.models import AppConfig, AppState, TrackedWeapon
+from data.models import AppConfig, AppState, TrackedWeapon, weapon_display_name
 from data.repository import StateRepository
 from services.roll_import_service import (
     ImportStrategy,
@@ -82,6 +82,7 @@ class MainWindow(QMainWindow):
 
         self.dashboard = Dashboard()
         self.dashboard.edit_requested.connect(self.edit_weapon_rolls)
+        self.dashboard.rename_requested.connect(self.rename_weapon)
         self.dashboard.targets_requested.connect(self.edit_weapon_targets)
         self.dashboard.clear_requested.connect(self.clear_weapon_rolls)
         self.dashboard.delete_requested.connect(self.delete_weapon)
@@ -170,6 +171,7 @@ class MainWindow(QMainWindow):
             self.state,
             weapon_type=dialog.selected_weapon_type(),
             attribute=dialog.selected_attribute(),
+            nickname=dialog.selected_nickname(),
         )
         self.persist_and_refresh()
 
@@ -189,6 +191,7 @@ class MainWindow(QMainWindow):
         incoming = TrackedWeapon(
             weapon_type=dialog.selected_weapon_type(),
             attribute=dialog.selected_attribute(),
+            nickname=dialog.selected_nickname(),
         )
         editor = RollEditorDialog(
             incoming,
@@ -262,8 +265,17 @@ class MainWindow(QMainWindow):
             manual_mode=self.development_mode,
             skill_display_mode=self.state.skill_display_mode,
         )
+        dialog.setWindowTitle(f"Edit Rolls - {weapon_display_name(self.state, weapon)}")
         if dialog.exec() == QDialog.Accepted:
             self.persist_and_refresh()
+
+    def rename_weapon(self, weapon_id: str, nickname: str) -> None:
+        weapon = self._find_weapon(weapon_id)
+        if weapon is None:
+            QMessageBox.warning(self, "Weapon Missing", "The selected weapon no longer exists.")
+            return
+        weapon.nickname = nickname.strip()
+        self.persist_and_refresh()
 
     def edit_weapon_targets(self, weapon_id: str) -> None:
         weapon = self._find_weapon(weapon_id)
@@ -276,6 +288,7 @@ class MainWindow(QMainWindow):
             self,
             skill_display_mode=self.state.skill_display_mode,
         )
+        dialog.setWindowTitle(f"Target Skills - {weapon_display_name(self.state, weapon)}")
         if dialog.exec() == QDialog.Accepted:
             self.persist_and_refresh()
 
@@ -287,7 +300,7 @@ class MainWindow(QMainWindow):
         response = QMessageBox.warning(
             self,
             "Clear Weapon Rolls",
-            f"Clear all recorded rolls for {weapon.display_name}?\n\n"
+            f"Clear all recorded rolls for {weapon_display_name(self.state, weapon)}?\n\n"
             "The weapon will remain tracked and its current index will be kept.",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
@@ -305,7 +318,7 @@ class MainWindow(QMainWindow):
         response = QMessageBox.warning(
             self,
             "Delete Weapon",
-            f"Delete {weapon.display_name}?\n\n"
+            f"Delete {weapon_display_name(self.state, weapon)}?\n\n"
             "This removes the weapon and its recorded rolls from the dashboard.",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No,
@@ -355,7 +368,7 @@ class MainWindow(QMainWindow):
         message.setIcon(QMessageBox.Warning)
         message.setWindowTitle("Existing Weapon Found")
         message.setText(
-            f"{incoming.display_name} already exists.\n\n"
+            f"{weapon_display_name(self.state, existing)} already exists.\n\n"
             "Merge fills missing roll slots and appends new slots. Replace overwrites existing roll data."
         )
         merge_button = message.addButton("Merge", QMessageBox.AcceptRole)
@@ -371,7 +384,7 @@ class MainWindow(QMainWindow):
             response = QMessageBox.warning(
                 self,
                 "Replace Roll Data",
-                f"Replace all recorded roll data for {incoming.display_name}?",
+                f"Replace all recorded roll data for {weapon_display_name(self.state, existing)}?",
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No,
             )

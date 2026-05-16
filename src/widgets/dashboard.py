@@ -3,12 +3,13 @@ from __future__ import annotations
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFrame, QLabel, QScrollArea, QVBoxLayout, QWidget
 
-from data.models import AppConfig, AppState
+from data.models import AppConfig, AppState, weapon_display_name
 from widgets.weapon_row import WeaponRow
 
 
 class Dashboard(QFrame):
     edit_requested = Signal(str)
+    rename_requested = Signal(str, str)
     targets_requested = Signal(str)
     clear_requested = Signal(str)
     delete_requested = Signal(str)
@@ -48,8 +49,9 @@ class Dashboard(QFrame):
             self.rows_layout.addWidget(empty, 1)
         else:
             for weapon in state.tracked_weapons:
-                row = WeaponRow(weapon, config)
+                row = WeaponRow(weapon, config, weapon_display_name(state, weapon))
                 row.edit_requested.connect(self.edit_requested.emit)
+                row.rename_requested.connect(self.rename_requested.emit)
                 row.targets_requested.connect(self.targets_requested.emit)
                 row.clear_requested.connect(self.clear_requested.emit)
                 row.delete_requested.connect(self.delete_requested.emit)
