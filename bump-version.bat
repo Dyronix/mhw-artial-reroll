@@ -98,13 +98,15 @@ if not errorlevel 1 (
 )
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$ErrorActionPreference = 'Stop';" ^
     "$version = '%NEW_VERSION%';" ^
+    "$dq = [char]34;" ^
     "Set-Content 'version.txt' $version -NoNewline -Encoding ASCII;" ^
     "$pyproject = Get-Content 'pyproject.toml' -Raw;" ^
-    "$pyproject = $pyproject -replace '(?m)^version = ""[^""]+""', ('version = ""' + $version + '""');" ^
+    "$pyproject = $pyproject -replace ('(?m)^version = ' + $dq + '[^' + $dq + ']+' + $dq), ('version = ' + $dq + $version + $dq);" ^
     "Set-Content 'pyproject.toml' $pyproject -NoNewline -Encoding ASCII;" ^
     "$appInfo = Get-Content 'src/app/app_info.py' -Raw;" ^
-    "$appInfo = $appInfo -replace 'APP_VERSION = ""[^""]+""', ('APP_VERSION = ""' + $version + '""');" ^
+    "$appInfo = $appInfo -replace ('APP_VERSION = ' + $dq + '[^' + $dq + ']+' + $dq), ('APP_VERSION = ' + $dq + $version + $dq);" ^
     "Set-Content 'src/app/app_info.py' $appInfo -NoNewline -Encoding ASCII;" ^
     "$vi = Get-Content 'packaging/version_info.txt' -Raw;" ^
     "$parts = $version.Split('.');" ^
