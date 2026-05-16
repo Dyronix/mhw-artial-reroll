@@ -2,7 +2,7 @@ from __future__ import annotations
 
 APP_NAME = "MH Wilds Gogmazios Tracker"
 APP_ID = "MHWildsGogmaziosTracker"
-APP_VERSION = "0.2.4"
+APP_VERSION = "0.3.0"
 APP_DISPLAY_VERSION = f"v{APP_VERSION}"
 APP_WINDOW_TITLE = f"{APP_NAME} - {APP_DISPLAY_VERSION}"
 APP_ORGANIZATION = "MHWildsTools"
