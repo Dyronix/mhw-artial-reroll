@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFrame, QLabel, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 from data.models import AppConfig, AppState, weapon_display_name
 from widgets.weapon_row import WeaponRow
@@ -30,13 +30,23 @@ class Dashboard(QFrame):
         title = QLabel("Weapon Roll Dashboard")
         title.setProperty("role", "section")
 
+        self.header_layout = QHBoxLayout()
+        self.header_layout.setContentsMargins(0, 0, 0, 0)
+        self.header_layout.setSpacing(10)
+        self.header_layout.addWidget(title)
+        self.header_layout.addStretch(1)
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(16, 14, 16, 16)
         layout.setSpacing(12)
-        layout.addWidget(title)
+        layout.addLayout(self.header_layout)
         layout.addWidget(scroll, 1)
 
         self.setProperty("frameRole", "card")
+
+    def set_header_actions(self, *widgets: QWidget) -> None:
+        for widget in widgets:
+            self.header_layout.addWidget(widget, 0, Qt.AlignRight)
 
     def set_state(self, state: AppState, config: AppConfig) -> None:
         while self.rows_layout.count():

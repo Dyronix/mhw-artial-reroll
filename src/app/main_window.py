@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
     QMainWindow,
+    QMenu,
     QMessageBox,
     QComboBox,
     QPushButton,
+    QToolButton,
     QVBoxLayout,
     QWidget,
     QDialog,
@@ -34,6 +37,7 @@ from widgets.dashboard import Dashboard
 from widgets.roll_editor import RollEditorDialog
 from widgets.skill_encyclopedia_dialog import SkillEncyclopediaDialog
 from widgets.target_skills_dialog import TargetSkillsDialog
+from widgets.weapon_browser_dialog import WeaponBrowserDialog
 from services.skill_display import SKILL_DISPLAY_MODES
 from app.app_info import APP_WINDOW_TITLE
 
@@ -62,11 +66,24 @@ class MainWindow(QMainWindow):
         self.create_button.clicked.connect(self.create_weapon)
         self.advance_button = QPushButton("Advance All Rolls")
         self.advance_button.clicked.connect(self.advance_rolls)
-        self.skill_encyclopedia_button = QPushButton("Skill Encyclopedia")
-        self.skill_encyclopedia_button.clicked.connect(self.open_skill_encyclopedia)
-        self.development_button = QPushButton("Development Mode: Off")
-        self.development_button.setCheckable(True)
-        self.development_button.clicked.connect(self.toggle_development_mode)
+        self.tools_menu = QMenu(self)
+        self.weapon_browser_action = self.tools_menu.addAction("Weapon Browser")
+        self.weapon_browser_action.triggered.connect(self.open_weapon_browser)
+        self.skill_encyclopedia_action = self.tools_menu.addAction("Skill Encyclopedia")
+        self.skill_encyclopedia_action.triggered.connect(self.open_skill_encyclopedia)
+        self.development_action = QAction("Development Mode: Off", self)
+        self.development_action.setCheckable(True)
+        self.development_action.triggered.connect(self.toggle_development_mode)
+        self.tools_menu.addAction(self.development_action)
+
+        self.tools_menu_button = QToolButton()
+        self.tools_menu_button.setText("☰")
+        self.tools_menu_button.setToolTip("Open tools menu")
+        self.tools_menu_button.setProperty("buttonRole", "iconAction")
+        self.tools_menu_button.setMinimumSize(42, 42)
+        self.tools_menu_button.setStyleSheet("font-size: 20px;")
+        self.tools_menu_button.setPopupMode(QToolButton.InstantPopup)
+        self.tools_menu_button.setMenu(self.tools_menu)
 
         header = QFrame()
         header.setProperty("frameRole", "header")
@@ -74,10 +91,7 @@ class MainWindow(QMainWindow):
         header_layout.setContentsMargins(18, 14, 18, 14)
         header_layout.setSpacing(12)
         header_layout.addLayout(title_block, 1)
-        header_layout.addWidget(self.create_button)
-        header_layout.addWidget(self.advance_button)
-        header_layout.addWidget(self.skill_encyclopedia_button)
-        header_layout.addWidget(self.development_button)
+        header_layout.addWidget(self.tools_menu_button, 0)
 
         self.dev_banner = QLabel(
             "Development Mode Active - manual edits will not automatically advance global roll state."
@@ -86,6 +100,7 @@ class MainWindow(QMainWindow):
         self.dev_banner.setVisible(False)
 
         self.dashboard = Dashboard()
+        self.dashboard.set_header_actions(self.create_button, self.advance_button)
         self.dashboard.edit_requested.connect(self.edit_weapon_rolls)
         self.dashboard.accept_next_requested.connect(self.accept_next_roll)
         self.dashboard.rename_requested.connect(self.rename_weapon)
@@ -300,6 +315,9 @@ class MainWindow(QMainWindow):
     def open_skill_encyclopedia(self) -> None:
         SkillEncyclopediaDialog(self.config, self).exec()
 
+    def open_weapon_browser(self) -> None:
+        WeaponBrowserDialog(self.state, self.config, self).exec()
+
     def edit_weapon_rolls(self, weapon_id: str) -> None:
         weapon = next((item for item in self.state.tracked_weapons if item.id == weapon_id), None)
         if weapon is None:
@@ -418,8 +436,8 @@ class MainWindow(QMainWindow):
             self.state.skill_display_mode = mode
             self.repository.save(self.state)
 
-    def toggle_development_mode(self) -> None:
-        if self.development_button.isChecked():
+    def toggle_development_mode(self, checked: bool) -> None:
+        if checked:
             response = QMessageBox.warning(
                 self,
                 "Enable Development Mode",
@@ -431,7 +449,9 @@ class MainWindow(QMainWindow):
                 QMessageBox.No,
             )
             if response != QMessageBox.Yes:
-                self.development_button.setChecked(False)
+                blocked = self.development_action.blockSignals(True)
+                self.development_action.setChecked(False)
+                self.development_action.blockSignals(blocked)
                 return
             self.development_mode = True
         else:
@@ -509,8 +529,10 @@ class MainWindow(QMainWindow):
             if self.development_mode
             else "Development-only tools are disabled. Enable Development Mode to enter paper notes."
         )
-        self.development_button.setChecked(self.development_mode)
-        self.development_button.setText(
+        blocked = self.development_action.blockSignals(True)
+        self.development_action.setChecked(self.development_mode)
+        self.development_action.blockSignals(blocked)
+        self.development_action.setText(
             "Development Mode: On" if self.development_mode else "Development Mode: Off"
         )
         index = self.skill_display_combo.findData(self.state.skill_display_mode)

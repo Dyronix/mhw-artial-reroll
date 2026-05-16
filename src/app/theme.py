@@ -137,6 +137,22 @@ def apply_dracula_theme(app: QApplication) -> None:
         QToolButton[buttonRole="iconAction"]:pressed {{
             background: {DRACULA["selection"]};
         }}
+        QMenu {{
+            background: {DRACULA["panel"]};
+            border: 1px solid {DRACULA["selection"]};
+            border-radius: 8px;
+            padding: 6px;
+        }}
+        QMenu::item {{
+            background: transparent;
+            border-radius: 5px;
+            padding: 8px 12px;
+            margin: 2px 0;
+        }}
+        QMenu::item:selected {{
+            background: {DRACULA["selection"]};
+            color: {DRACULA["cyan"]};
+        }}
         QLineEdit, QComboBox, QSpinBox, QTableWidget {{
             background: #21222c;
             border: 1px solid {DRACULA["selection"]};
