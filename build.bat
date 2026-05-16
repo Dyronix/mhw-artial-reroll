@@ -5,6 +5,7 @@ set APP_NAME=MHWildsGogmaziosTracker
 set VENV_DIR=.venv
 set PYTHON_EXE=%VENV_DIR%\Scripts\python.exe
 set DIST_DIR=dist\%APP_NAME%
+set MAIN_SCRIPT=src\main.py
 
 echo.
 echo Building %APP_NAME% for Windows...
@@ -31,27 +32,9 @@ if errorlevel 1 goto :fail
 "%PYTHON_EXE%" -m pip install -r requirements.txt
 if errorlevel 1 goto :fail
 
-if exist "assets\icons\app_icon.png" if not exist "assets\icons\app_icon.ico" (
-    echo.
-    echo WARNING: assets\icons\app_icon.png exists, but app_icon.ico is missing.
-    echo PyInstaller needs assets\icons\app_icon.ico for the EXE icon.
-    echo Convert the PNG to ICO before packaging if you want a custom EXE icon.
-    echo.
-)
-
 echo Running PyInstaller...
-"%PYTHON_EXE%" -m PyInstaller --clean --noconfirm packaging\MHWildsGogmaziosTracker.spec
+"%PYTHON_EXE%" -m PyInstaller --clean --noconfirm --windowed --name "%APP_NAME%" --paths src --add-data "data;data" --add-data "assets;assets" "%MAIN_SCRIPT%"
 if errorlevel 1 goto :fail
-
-echo Copying distributable data folders...
-if not exist "%DIST_DIR%\data" mkdir "%DIST_DIR%\data"
-xcopy /E /I /Y "data\config" "%DIST_DIR%\data\config" >nul
-if errorlevel 1 goto :fail
-
-if exist "assets" (
-    xcopy /E /I /Y "assets" "%DIST_DIR%\assets" >nul
-    if errorlevel 1 goto :fail
-)
 
 echo.
 echo Build complete.
