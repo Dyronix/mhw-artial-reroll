@@ -17,10 +17,11 @@ from PySide6.QtWidgets import (
     QStyle,
     QStyleOptionViewItem,
     QVBoxLayout,
+    QWidget,
 )
 
-from app.path_utils import asset_path
 from data.models import AppConfig, AppState, Skill, weapon_display_name
+from widgets.weapon_icon_utils import load_attribute_icon, load_skill_type_icon, load_weapon_icon
 
 
 @dataclass(frozen=True)
@@ -145,25 +146,39 @@ class WeaponBrowserDialog(QDialog):
         self.weapon_name.setProperty("role", "section")
         self.weapon_name.setWordWrap(True)
 
-        self.weapon_meta = QLabel("Select a weapon from the list.")
-        self.weapon_meta.setProperty("role", "muted")
-        self.weapon_meta.setWordWrap(True)
+        self.weapon_type_icon = QLabel()
+        self.weapon_type_icon.setFixedSize(24, 24)
+        self.weapon_type_text = QLabel("Select a weapon from the list.")
+        self.weapon_type_text.setProperty("role", "muted")
+        self.weapon_type_text.setWordWrap(True)
+
+        self.attribute_icon = QLabel()
+        self.attribute_icon.setFixedSize(24, 24)
+        self.attribute_text = QLabel("")
+        self.attribute_text.setProperty("role", "muted")
+        self.attribute_text.setWordWrap(True)
 
         self.set_skill_name = QLabel("None")
-        self.set_skill_name.setStyleSheet("background: transparent;")
         self.set_skill_name.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.set_skill_name.setWordWrap(True)
+        self.set_skill_icon = QLabel()
+        self.set_skill_icon.setFixedSize(24, 24)
+        _set_meta_icon(self.set_skill_icon, load_skill_type_icon("set_bonus", size=24))
         self.set_skill_description = QLabel("No set bonus skill recorded.")
         self.set_skill_description.setProperty("role", "muted")
+        self.set_skill_description.setProperty("padded", True)
         self.set_skill_description.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.set_skill_description.setWordWrap(True)
 
         self.group_skill_name = QLabel("None")
-        self.group_skill_name.setStyleSheet("background: transparent;")
         self.group_skill_name.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.group_skill_name.setWordWrap(True)
+        self.group_skill_icon = QLabel()
+        self.group_skill_icon.setFixedSize(24, 24)
+        _set_meta_icon(self.group_skill_icon, load_skill_type_icon("group", size=24))
         self.group_skill_description = QLabel("No group skill recorded.")
         self.group_skill_description.setProperty("role", "muted")
+        self.group_skill_description.setProperty("padded", True)
         self.group_skill_description.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.group_skill_description.setWordWrap(True)
 
@@ -173,13 +188,22 @@ class WeaponBrowserDialog(QDialog):
         detail_layout.setContentsMargins(16, 16, 16, 16)
         detail_layout.setSpacing(12)
         detail_layout.addWidget(self.weapon_name)
-        detail_layout.addWidget(self.weapon_meta)
-        detail_layout.addWidget(_section_label("Set Bonus Skill"))
-        detail_layout.addWidget(self.set_skill_name)
-        detail_layout.addWidget(self.set_skill_description)
-        detail_layout.addWidget(_section_label("Group Skill"))
-        detail_layout.addWidget(self.group_skill_name)
-        detail_layout.addWidget(self.group_skill_description)
+        detail_layout.addWidget(_meta_row("Weapon Type", self.weapon_type_icon, self.weapon_type_text))
+        detail_layout.addWidget(
+            _meta_row("Element / Ailment", self.attribute_icon, self.attribute_text)
+        )
+        detail_layout.addWidget(
+            _detail_group(
+                _meta_row("Set Bonus Skill", self.set_skill_icon, self.set_skill_name),
+                self.set_skill_description,
+            )
+        )
+        detail_layout.addWidget(
+            _detail_group(
+                _meta_row("Group Skill", self.group_skill_icon, self.group_skill_name),
+                self.group_skill_description,
+            )
+        )
         detail_layout.addStretch(1)
 
         body = QHBoxLayout()
@@ -204,7 +228,10 @@ class WeaponBrowserDialog(QDialog):
     def _show_row(self, index: int) -> None:
         if index < 0 or index >= len(self.rows):
             self.weapon_name.setText("No weapon selected")
-            self.weapon_meta.setText("Select a weapon from the list.")
+            self.weapon_type_icon.clear()
+            self.weapon_type_text.setText("Select a weapon from the list.")
+            self.attribute_icon.clear()
+            self.attribute_text.clear()
             self.set_skill_name.setText("None")
             self.set_skill_description.setText("No set bonus skill recorded.")
             self.group_skill_name.setText("None")
@@ -213,9 +240,10 @@ class WeaponBrowserDialog(QDialog):
 
         row = self.rows[index]
         self.weapon_name.setText(row.title)
-        self.weapon_meta.setText(
-            f"Weapon Type: {row.weapon_type}\nElement / Ailment: {row.attribute}"
-        )
+        _set_meta_icon(self.weapon_type_icon, row.weapon_icon)
+        self.weapon_type_text.setText(row.weapon_type)
+        _set_meta_icon(self.attribute_icon, row.attribute_icon)
+        self.attribute_text.setText(row.attribute)
         _set_skill_widgets(
             self.set_skill_name,
             self.set_skill_description,
@@ -240,8 +268,10 @@ def _weapon_rows(state: AppState, config: AppConfig) -> list[WeaponBrowserRow]:
             attribute=weapon.attribute,
             set_bonus_skill=skills_by_name.get(weapon.current_set_bonus_skill),
             group_skill=skills_by_name.get(weapon.current_group_skill),
-            weapon_icon=_load_icon("weapons", weapon.weapon_type, suffix=".jpeg"),
-            attribute_icon=_load_attribute_icon(weapon.attribute),
+            weapon_icon=load_weapon_icon(weapon.weapon_type, size=WeaponBrowserListDelegate.ICON_SIZE),
+            attribute_icon=load_attribute_icon(
+                weapon.attribute, size=WeaponBrowserListDelegate.ICON_SIZE
+            ),
         )
         for weapon in state.tracked_weapons
     ]
@@ -267,6 +297,25 @@ def _section_label(text: str) -> QLabel:
     return label
 
 
+def _meta_row(
+    title: str,
+    icon_label: QLabel,
+    text_label: QLabel,
+) -> QWidget:
+    row = QWidget()
+    layout = QHBoxLayout(row)
+    layout.setContentsMargins(6, 6, 0, 6)
+    layout.setSpacing(8)
+
+    heading = QLabel(f"{title}:")
+    heading.setProperty("role", "muted")
+    heading.setMinimumWidth(110)
+    layout.addWidget(heading, 0, Qt.AlignTop)
+    layout.addWidget(icon_label, 0, Qt.AlignTop)
+    layout.addWidget(text_label, 1, Qt.AlignVCenter)
+    return row
+
+
 def _set_skill_widgets(
     name_label: QLabel,
     description_label: QLabel,
@@ -280,6 +329,16 @@ def _set_skill_widgets(
         return
     name_label.setText(skill.name)
     description_label.setText(skill.description or "No description available.")
+
+
+def _detail_group(header_row: QWidget, description_label: QLabel) -> QWidget:
+    block = QWidget()
+    layout = QVBoxLayout(block)
+    layout.setContentsMargins(0, 0, 0, 6)
+    layout.setSpacing(0)
+    layout.addWidget(header_row)
+    layout.addWidget(description_label)
+    return block
 
 
 def _text_role(option: QStyleOptionViewItem) -> QPalette.ColorRole:
@@ -296,33 +355,8 @@ def _row_background(option: QStyleOptionViewItem, row_index: int):
     return option.palette.base()
 
 
-def _load_attribute_icon(attribute: str) -> QPixmap | None:
-    for folder in ("elements", "ailments"):
-        pixmap = _load_icon(folder, attribute, suffix=".png")
-        if pixmap is not None:
-            return pixmap
-    return None
-
-
-def _load_icon(folder: str, name: str, *, suffix: str) -> QPixmap | None:
-    path = asset_path("icons", folder, f"{_slugify(name)}{suffix}")
-    if not path.exists():
-        return None
-    pixmap = QPixmap(str(path))
-    if pixmap.isNull():
-        return None
-    return pixmap.scaled(
-        WeaponBrowserListDelegate.ICON_SIZE,
-        WeaponBrowserListDelegate.ICON_SIZE,
-        Qt.KeepAspectRatio,
-        Qt.SmoothTransformation,
-    )
-
-
-def _slugify(value: str) -> str:
-    slug = value.strip().casefold().replace("&", "and")
-    for source, replacement in ((" / ", "_"), (" ", "_"), ("-", "_")):
-        slug = slug.replace(source, replacement)
-    while "__" in slug:
-        slug = slug.replace("__", "_")
-    return slug.strip("_")
+def _set_meta_icon(label: QLabel, pixmap: QPixmap | None) -> None:
+    if pixmap is None:
+        label.clear()
+        return
+    label.setPixmap(pixmap)

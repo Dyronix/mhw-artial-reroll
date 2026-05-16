@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -17,6 +18,7 @@ from app.font_awesome import font_awesome_icon
 from data.models import AppConfig, TrackedWeapon
 from services.skill_display import skill_completion_options
 from services.target_skills import target_summary
+from widgets.weapon_icon_utils import load_attribute_icon, load_weapon_icon, skill_summary_html
 from widgets.roll_strip import RollStrip
 from widgets.skill_entry_line_edit import SkillEntryLineEdit
 
@@ -46,11 +48,22 @@ class WeaponRow(QFrame):
         self._skills_edit_in_progress = False
         self.setProperty("frameRole", "card")
 
+        self.weapon_icon = QLabel()
+        self.weapon_icon.setFixedSize(24, 24)
+        self.attribute_icon = QLabel()
+        self.attribute_icon.setFixedSize(24, 24)
         self.title = QLabel(title)
         self.title.setProperty("role", "section")
         self.title.setCursor(Qt.IBeamCursor)
         self.title.mouseDoubleClickEvent = self._start_rename
         self.title.setToolTip("Double-click to rename this weapon row")
+        self.title_display = QWidget()
+        title_layout = QHBoxLayout(self.title_display)
+        title_layout.setContentsMargins(0, 0, 0, 0)
+        title_layout.setSpacing(8)
+        title_layout.addWidget(self.weapon_icon)
+        title_layout.addWidget(self.attribute_icon)
+        title_layout.addWidget(self.title, 1)
         self.title_editor = QLineEdit()
         self.title_editor.setVisible(False)
         self.title_editor.returnPressed.connect(self._commit_rename)
@@ -106,7 +119,7 @@ class WeaponRow(QFrame):
         actions.addWidget(delete_button)
 
         top = QGridLayout()
-        top.addWidget(self.title, 0, 0)
+        top.addWidget(self.title_display, 0, 0)
         top.addWidget(self.title_editor, 0, 0)
         top.addWidget(self.index_label, 1, 0)
         top.addWidget(self.current_skills_label, 2, 0)
@@ -124,6 +137,8 @@ class WeaponRow(QFrame):
 
     def refresh(self) -> None:
         self.title.setText(self.title_text)
+        _set_icon_label(self.weapon_icon, load_weapon_icon(self.weapon.weapon_type, size=24))
+        _set_icon_label(self.attribute_icon, load_attribute_icon(self.weapon.attribute, size=24))
         self.index_label.setText(f"Current roll index: {self.weapon.current_index + 1}")
         self.current_skills_label.setText(_current_skills_summary(self.weapon))
         self.targets_label.setText(target_summary(self.weapon))
@@ -213,11 +228,16 @@ def _icon_button(icon_name: str, label: str) -> QToolButton:
 
 
 def _current_skills_summary(weapon: TrackedWeapon) -> str:
-    if weapon.current_set_bonus_skill == "0" and weapon.current_group_skill == "0":
-        return "Current skills: none"
-    parts = []
-    if weapon.current_set_bonus_skill != "0":
-        parts.append(f"Set: {weapon.current_set_bonus_skill}")
-    if weapon.current_group_skill != "0":
-        parts.append(f"Group: {weapon.current_group_skill}")
-    return "Current skills: " + " | ".join(parts)
+    return skill_summary_html(
+        set_bonus_skill=weapon.current_set_bonus_skill,
+        group_skill=weapon.current_group_skill,
+        empty_text="none",
+        prefix="Current skills: ",
+    )
+
+
+def _set_icon_label(label: QLabel, pixmap: QPixmap | None) -> None:
+    if pixmap is None:
+        label.clear()
+        return
+    label.setPixmap(pixmap)

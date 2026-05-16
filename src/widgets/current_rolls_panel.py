@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QFrame, QGridLayout, QLabel, QVBoxLayout
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
 from data.models import AppState, RollResult, weapon_display_name
 from services.rolls import current_roll, next_roll
+from widgets.weapon_icon_utils import load_attribute_icon, load_weapon_icon, skill_summary_html
 
 
 class CurrentRollsPanel(QFrame):
@@ -42,9 +44,22 @@ class CurrentRollsPanel(QFrame):
             grid.setContentsMargins(0, 6, 0, 6)
             grid.setHorizontalSpacing(12)
             grid.setVerticalSpacing(4)
+            header = QWidget()
+            header_layout = QHBoxLayout(header)
+            header_layout.setContentsMargins(0, 0, 0, 0)
+            header_layout.setSpacing(8)
+            weapon_icon = QLabel()
+            weapon_icon.setFixedSize(22, 22)
+            attribute_icon = QLabel()
+            attribute_icon.setFixedSize(22, 22)
+            _set_icon_label(weapon_icon, load_weapon_icon(weapon.weapon_type, size=22))
+            _set_icon_label(attribute_icon, load_attribute_icon(weapon.attribute, size=22))
             name = QLabel(weapon_display_name(state, weapon))
             name.setStyleSheet("background: transparent; font-weight: 700;")
-            grid.addWidget(name, 0, 0, 1, 2)
+            header_layout.addWidget(weapon_icon)
+            header_layout.addWidget(attribute_icon)
+            header_layout.addWidget(name, 1)
+            grid.addWidget(header, 0, 0, 1, 2)
             grid.addWidget(QLabel(f"Current #{weapon.current_index + 1}"), 1, 0)
             grid.addWidget(QLabel(_roll_summary(current_roll(weapon))), 1, 1)
             grid.addWidget(QLabel(f"Next #{weapon.current_index + 2}"), 2, 0)
@@ -56,12 +71,16 @@ class CurrentRollsPanel(QFrame):
 def _roll_summary(roll: RollResult | None) -> str:
     if roll is None:
         return "Not entered"
-    parts = []
-    if roll.set_bonus_skill != "0":
-        parts.append(f"Set: {roll.set_bonus_skill}")
-    if roll.group_skill != "0":
-        parts.append(f"Group: {roll.group_skill}")
-    if not parts:
-        return "0"
-    suffix = " [highlight]" if roll.highlighted else ""
-    return " | ".join(parts) + suffix
+    return skill_summary_html(
+        set_bonus_skill=roll.set_bonus_skill,
+        group_skill=roll.group_skill,
+        empty_text="0",
+        highlighted=roll.highlighted,
+    )
+
+
+def _set_icon_label(label: QLabel, pixmap: QPixmap | None) -> None:
+    if pixmap is None:
+        label.clear()
+        return
+    label.setPixmap(pixmap)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QComboBox,
@@ -18,11 +19,13 @@ from PySide6.QtWidgets import (
 )
 
 from data.models import AppConfig, Skill
+from widgets.weapon_icon_utils import load_skill_type_icon
 
 
 @dataclass(frozen=True)
 class SkillEncyclopediaRow:
     category: str
+    icon_type: str | None
     skill: Skill
 
 
@@ -97,8 +100,16 @@ class SkillEncyclopediaDialog(QDialog):
                 row.skill.description,
             ]
             for column, value in enumerate(values):
-                item = QTableWidgetItem(value)
+                display_value = value
+                if column == 0 and row.icon_type:
+                    display_value = ""
+                item = QTableWidgetItem(display_value)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                if column == 0:
+                    pixmap = load_skill_type_icon(row.icon_type, size=18) if row.icon_type else None
+                    if pixmap is not None:
+                        item.setIcon(QIcon(pixmap))
+                    item.setToolTip(value)
                 if column == 3:
                     item.setToolTip(value)
                 self.table.setItem(index, column, item)
@@ -107,9 +118,9 @@ class SkillEncyclopediaDialog(QDialog):
 
 def _skill_rows(config: AppConfig) -> list[SkillEncyclopediaRow]:
     rows: list[SkillEncyclopediaRow] = []
-    rows.extend(SkillEncyclopediaRow("Set Bonus", skill) for skill in config.set_bonus_skills)
-    rows.extend(SkillEncyclopediaRow("Group Skill", skill) for skill in config.group_skills)
-    rows.extend(SkillEncyclopediaRow("Encyclopedia", skill) for skill in config.skill_encyclopedia)
+    rows.extend(SkillEncyclopediaRow("Set Bonus", "set_bonus", skill) for skill in config.set_bonus_skills)
+    rows.extend(SkillEncyclopediaRow("Group Skill", "group", skill) for skill in config.group_skills)
+    rows.extend(SkillEncyclopediaRow("Encyclopedia", None, skill) for skill in config.skill_encyclopedia)
     return rows
 
 

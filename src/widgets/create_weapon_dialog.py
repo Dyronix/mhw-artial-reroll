@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -14,6 +15,7 @@ from PySide6.QtWidgets import (
 from data.models import AppConfig
 from services.skill_display import skill_completion_options
 from widgets.skill_entry_line_edit import SkillEntryLineEdit
+from widgets.weapon_icon_utils import load_attribute_icon, load_weapon_icon
 
 
 class CreateWeaponDialog(QDialog):
@@ -29,10 +31,20 @@ class CreateWeaponDialog(QDialog):
         self.setWindowTitle("Add Prerecorded Weapon" if manual_mode else "Create New Weapon")
 
         self.weapon_type = QComboBox()
-        self.weapon_type.addItems([item.name for item in config.weapon_types])
+        for item in config.weapon_types:
+            pixmap = load_weapon_icon(item.name, size=18)
+            if pixmap is None:
+                self.weapon_type.addItem(item.name)
+            else:
+                self.weapon_type.addItem(QIcon(pixmap), item.name)
 
         self.attribute = QComboBox()
-        self.attribute.addItems(config.attributes)
+        for attribute in config.attributes:
+            pixmap = load_attribute_icon(attribute, size=18)
+            if pixmap is None:
+                self.attribute.addItem(attribute)
+            else:
+                self.attribute.addItem(QIcon(pixmap), attribute)
         self.nickname = QLineEdit()
         self.nickname.setPlaceholderText("Optional row name")
         set_skills, set_aliases = skill_completion_options(config.set_bonus_skills, skill_display_mode)

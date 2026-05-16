@@ -79,6 +79,9 @@ def apply_dracula_theme(app: QApplication) -> None:
             background: transparent;
             color: {DRACULA["muted"]};
         }}
+        QLabel[padded="true"] {{
+            padding-left: 6px;
+        }}
         QLabel:disabled {{
             color: #777989;
         }}
