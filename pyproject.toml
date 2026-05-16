@@ -1,6 +1,6 @@
 [project]
 name = "artian-reroll"
-version = "0.2.1"
+version = "0.2.2"
 description = "Local tracker for Monster Hunter Wilds Artian weapon reroll tables."
 requires-python = ">=3.10"
 dependencies = [

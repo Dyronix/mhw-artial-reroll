@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from data.models import AppState, RollResult, weapon_display_name
-from services.rolls import current_roll, next_roll
+from services.rolls import current_roll
 from widgets.weapon_icon_utils import load_attribute_icon, load_weapon_icon, skill_summary_html
 
 
@@ -87,10 +87,11 @@ class CurrentRollsPanel(QFrame):
             header_layout.addWidget(attribute_icon)
             header_layout.addWidget(name, 1)
             grid.addWidget(header, 0, 0, 1, 2)
-            grid.addWidget(QLabel(f"Current #{weapon.current_index + 1}"), 1, 0)
-            grid.addWidget(QLabel(_roll_summary(current_roll(weapon))), 1, 1)
-            grid.addWidget(QLabel(f"Next #{weapon.current_index + 2}"), 2, 0)
-            grid.addWidget(QLabel(_roll_summary(next_roll(weapon))), 2, 1)
+            roll = current_roll(weapon)
+            grid.addWidget(QLabel("Current Set"), 1, 0)
+            grid.addWidget(QLabel(_set_bonus_summary(roll)), 1, 1)
+            grid.addWidget(QLabel("Current Group"), 2, 0)
+            grid.addWidget(QLabel(_group_summary(roll)), 2, 1)
             hint = QLabel("Click card to accept next skills and advance")
             hint.setProperty("role", "muted")
             grid.addWidget(hint, 3, 0, 1, 2)
@@ -98,14 +99,19 @@ class CurrentRollsPanel(QFrame):
             self.content.addWidget(frame)
 
 
-def _roll_summary(roll: RollResult | None) -> str:
-    if roll is None:
-        return "Not entered"
+def _set_bonus_summary(roll: RollResult | None) -> str:
     return skill_summary_html(
-        set_bonus_skill=roll.set_bonus_skill,
-        group_skill=roll.group_skill,
-        empty_text="0",
-        highlighted=roll.highlighted,
+        set_bonus_skill="0" if roll is None else roll.set_bonus_skill,
+        group_skill="0",
+        empty_text=" - ",
+    )
+
+
+def _group_summary(roll: RollResult | None) -> str:
+    return skill_summary_html(
+        set_bonus_skill="0",
+        group_skill="0" if roll is None else roll.group_skill,
+        empty_text=" - ",
     )
 
 

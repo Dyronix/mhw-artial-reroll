@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QVBoxLay
 from app.theme import DRACULA
 from data.models import AppConfig, TrackedWeapon
 from services.target_skills import roll_matches_targets
+from widgets.weapon_icon_utils import skill_summary_html
 
 
 class RollStrip(QScrollArea):
@@ -19,7 +20,7 @@ class RollStrip(QScrollArea):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(6)
         self.setWidget(self.container)
-        self.setMinimumHeight(92)
+        self.setMinimumHeight(112)
         self.current_card: QFrame | None = None
 
     def set_weapon(self, weapon: TrackedWeapon, config: AppConfig) -> None:
@@ -42,8 +43,9 @@ class RollStrip(QScrollArea):
         for index in range(start_index, end_index):
             roll = weapon.rolls[index] if index < len(weapon.rolls) else None
             card = QFrame()
-            card.setFixedSize(132, 70)
+            card.setFixedSize(172, 88)
             card.setFrameShape(QFrame.NoFrame)
+            card.setToolTip(_roll_tooltip(index, roll))
             background, border, text_color = _roll_colors(
                 is_current=index == weapon.current_index,
                 is_history=index < weapon.current_index,
@@ -59,8 +61,8 @@ class RollStrip(QScrollArea):
                 "}"
             )
             layout = QVBoxLayout(card)
-            layout.setContentsMargins(8, 6, 8, 6)
-            layout.setSpacing(2)
+            layout.setContentsMargins(10, 7, 10, 7)
+            layout.setSpacing(3)
             text = QLabel(
                 _roll_title(
                     index,
@@ -71,12 +73,12 @@ class RollStrip(QScrollArea):
             )
             text.setAlignment(Qt.AlignCenter)
             text.setStyleSheet(f"background: transparent; color: {text_color}; font-weight: 700;")
-            details = QLabel(_roll_details(roll))
+            details = QLabel(_roll_preview(roll))
             details.setAlignment(Qt.AlignCenter)
-            details.setWordWrap(True)
-            details.setStyleSheet(f"background: transparent; color: {text_color}; font-size: 11px;")
+            details.setWordWrap(False)
+            details.setStyleSheet(f"background: transparent; color: {text_color}; font-size: 10px;")
             layout.addWidget(text)
-            layout.addWidget(details)
+            layout.addWidget(details, 1)
             self.layout.addWidget(card)
             if index == weapon.current_index:
                 self.current_card = card
@@ -100,15 +102,55 @@ def _roll_title(index: int, highlighted: bool, is_current: bool, is_history: boo
     return f"{marker} #{index + 1}"
 
 
-def _roll_details(roll) -> str:
+def _roll_preview(roll) -> str:
     if roll is None or not roll.useful():
         return "Unknown"
-    parts = []
+
+    set_text = _short_skill_name(roll.set_bonus_skill)
+    group_text = _short_skill_name(roll.group_skill)
+    return "<br/>".join(
+        (
+            skill_summary_html(
+                set_bonus_skill=set_text if roll.set_bonus_skill != "0" else "0",
+                group_skill="0",
+                empty_text="-",
+                icon_size=12,
+            ),
+            skill_summary_html(
+                set_bonus_skill="0",
+                group_skill=group_text if roll.group_skill != "0" else "0",
+                empty_text="-",
+                icon_size=12,
+            ),
+        )
+    )
+
+
+def _roll_tooltip(index: int, roll) -> str:
+    if roll is None or not roll.useful():
+        return f"Roll #{index + 1}: unknown skills"
+
+    parts = [f"Roll #{index + 1}"]
     if roll.set_bonus_skill != "0":
-        parts.append("Set")
+        parts.append(f"Set Bonus: {roll.set_bonus_skill}")
+    else:
+        parts.append("Set Bonus: none")
     if roll.group_skill != "0":
-        parts.append("Group")
-    return " + ".join(parts)
+        parts.append(f"Group Skill: {roll.group_skill}")
+    else:
+        parts.append("Group Skill: none")
+    if roll.highlighted:
+        parts.append("Highlighted")
+    return "\n".join(parts)
+
+
+def _short_skill_name(value: str, max_length: int = 18) -> str:
+    if value == "0":
+        return "-"
+    text = value.strip()
+    if len(text) <= max_length:
+        return text
+    return f"{text[: max_length - 3].rstrip()}..."
 
 
 def _roll_colors(
