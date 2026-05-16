@@ -49,6 +49,8 @@ class TrackedWeapon:
     weapon_type: str
     attribute: str
     nickname: str = ""
+    current_set_bonus_skill: str = "0"
+    current_group_skill: str = "0"
     current_index: int = 0
     rolls: list[RollResult] = field(default_factory=list)
     target_rules: list[TargetRule] = field(default_factory=list)
@@ -114,11 +116,22 @@ def roll_from_dict(data: dict[str, Any]) -> RollResult:
 
 def weapon_from_dict(data: dict[str, Any]) -> TrackedWeapon:
     rolls = [roll_from_dict(item) for item in data.get("rolls", []) if isinstance(item, dict)]
+    legacy_current_set_bonus_skill = "0"
+    legacy_current_group_skill = "0"
+    if rolls:
+        legacy_current_set_bonus_skill = rolls[0].set_bonus_skill
+        legacy_current_group_skill = rolls[0].group_skill
     return TrackedWeapon(
         id=str(data.get("id") or uuid4().hex),
         weapon_type=str(data.get("weapon_type", "")),
         attribute=str(data.get("attribute", "")),
         nickname=str(data.get("nickname", "") or "").strip(),
+        current_set_bonus_skill=_clean_skill(
+            data.get("current_set_bonus_skill", legacy_current_set_bonus_skill)
+        ),
+        current_group_skill=_clean_skill(
+            data.get("current_group_skill", legacy_current_group_skill)
+        ),
         current_index=max(0, int(data.get("current_index", 0) or 0)),
         rolls=rolls,
         target_rules=_clean_target_rule_list(data.get("target_rules", [])),

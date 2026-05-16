@@ -56,6 +56,8 @@ def import_prerecorded_weapon(
         return incoming
 
     if strategy == ImportStrategy.REPLACE:
+        existing.current_set_bonus_skill = incoming.current_set_bonus_skill
+        existing.current_group_skill = incoming.current_group_skill
         existing.rolls = incoming.rolls
         return existing
 
@@ -71,6 +73,10 @@ def _merge_rolls(
     incoming: TrackedWeapon,
     overwrite_conflicts: bool,
 ) -> None:
+    if existing.current_set_bonus_skill == "0" and incoming.current_set_bonus_skill != "0":
+        existing.current_set_bonus_skill = incoming.current_set_bonus_skill
+    if existing.current_group_skill == "0" and incoming.current_group_skill != "0":
+        existing.current_group_skill = incoming.current_group_skill
     for index, incoming_roll in enumerate(incoming.rolls):
         if index >= len(existing.rolls):
             existing.rolls.append(incoming_roll)

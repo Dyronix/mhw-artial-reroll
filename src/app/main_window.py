@@ -21,7 +21,7 @@ from services.roll_import_service import (
     import_prerecorded_weapon,
     preview_merge,
 )
-from services.rolls import add_weapon_after_craft, advance_all
+from services.rolls import accept_next_roll_for_weapon, add_weapon_after_craft, advance_all
 from widgets.create_weapon_dialog import CreateWeaponDialog
 from widgets.current_rolls_panel import CurrentRollsPanel
 from widgets.collapsible_panel import CollapsiblePanel
@@ -82,7 +82,9 @@ class MainWindow(QMainWindow):
 
         self.dashboard = Dashboard()
         self.dashboard.edit_requested.connect(self.edit_weapon_rolls)
+        self.dashboard.accept_next_requested.connect(self.accept_next_roll)
         self.dashboard.rename_requested.connect(self.rename_weapon)
+        self.dashboard.current_skills_changed.connect(self.update_weapon_current_skills)
         self.dashboard.targets_requested.connect(self.edit_weapon_targets)
         self.dashboard.clear_requested.connect(self.clear_weapon_rolls)
         self.dashboard.delete_requested.connect(self.delete_weapon)
@@ -164,15 +166,23 @@ class MainWindow(QMainWindow):
         return CollapsiblePanel("Settings", content, expanded=False)
 
     def create_weapon(self) -> None:
-        dialog = CreateWeaponDialog(self.config, self)
+        dialog = CreateWeaponDialog(
+            self.config,
+            self,
+            skill_display_mode=self.state.skill_display_mode,
+        )
         if dialog.exec() != QDialog.Accepted:
             return
-        add_weapon_after_craft(
+        weapon = add_weapon_after_craft(
             self.state,
             weapon_type=dialog.selected_weapon_type(),
             attribute=dialog.selected_attribute(),
             nickname=dialog.selected_nickname(),
         )
+        (
+            weapon.current_set_bonus_skill,
+            weapon.current_group_skill,
+        ) = dialog.selected_current_skills()
         self.persist_and_refresh()
 
     def add_prerecorded_weapon(self) -> None:
@@ -184,7 +194,12 @@ class MainWindow(QMainWindow):
             )
             return
 
-        dialog = CreateWeaponDialog(self.config, self, manual_mode=True)
+        dialog = CreateWeaponDialog(
+            self.config,
+            self,
+            manual_mode=True,
+            skill_display_mode=self.state.skill_display_mode,
+        )
         if dialog.exec() != QDialog.Accepted:
             return
 
@@ -193,6 +208,10 @@ class MainWindow(QMainWindow):
             attribute=dialog.selected_attribute(),
             nickname=dialog.selected_nickname(),
         )
+        (
+            incoming.current_set_bonus_skill,
+            incoming.current_group_skill,
+        ) = dialog.selected_current_skills()
         editor = RollEditorDialog(
             incoming,
             self.config,
@@ -269,12 +288,44 @@ class MainWindow(QMainWindow):
         if dialog.exec() == QDialog.Accepted:
             self.persist_and_refresh()
 
+    def accept_next_roll(self, weapon_id: str) -> None:
+        weapon = self._find_weapon(weapon_id)
+        if weapon is None:
+            QMessageBox.warning(self, "Weapon Missing", "The selected weapon no longer exists.")
+            return
+        if not accept_next_roll_for_weapon(
+            self.state,
+            weapon,
+            action=f"Accepted next roll for {weapon_display_name(self.state, weapon)}",
+        ):
+            QMessageBox.information(
+                self,
+                "Next Roll Missing",
+                f"No recorded next roll is available for {weapon_display_name(self.state, weapon)}.",
+            )
+            return
+        self.persist_and_refresh()
+
     def rename_weapon(self, weapon_id: str, nickname: str) -> None:
         weapon = self._find_weapon(weapon_id)
         if weapon is None:
             QMessageBox.warning(self, "Weapon Missing", "The selected weapon no longer exists.")
             return
         weapon.nickname = nickname.strip()
+        self.persist_and_refresh()
+
+    def update_weapon_current_skills(
+        self,
+        weapon_id: str,
+        set_bonus_skill: str,
+        group_skill: str,
+    ) -> None:
+        weapon = self._find_weapon(weapon_id)
+        if weapon is None:
+            QMessageBox.warning(self, "Weapon Missing", "The selected weapon no longer exists.")
+            return
+        weapon.current_set_bonus_skill = set_bonus_skill or "0"
+        weapon.current_group_skill = group_skill or "0"
         self.persist_and_refresh()
 
     def edit_weapon_targets(self, weapon_id: str) -> None:

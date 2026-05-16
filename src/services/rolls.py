@@ -10,6 +10,20 @@ def advance_all(state: AppState, action: str = "Advanced all rolls") -> None:
         weapon.current_index += 1
 
 
+def accept_next_roll_for_weapon(
+    state: AppState,
+    weapon: TrackedWeapon,
+    action: str = "Accepted next roll",
+) -> bool:
+    roll = next_roll(weapon)
+    if roll is None:
+        return False
+    weapon.current_set_bonus_skill = roll.set_bonus_skill
+    weapon.current_group_skill = roll.group_skill
+    advance_all(state, action=action)
+    return True
+
+
 def add_weapon_after_craft(
     state: AppState,
     weapon_type: str,
@@ -39,3 +53,9 @@ def set_rolls(weapon: TrackedWeapon, rolls: list[RollResult]) -> None:
     weapon.rolls = rolls
     if weapon.current_index < 0:
         weapon.current_index = 0
+
+
+def set_current_roll(weapon: TrackedWeapon, roll: RollResult) -> None:
+    while len(weapon.rolls) <= weapon.current_index:
+        weapon.rolls.append(RollResult())
+    weapon.rolls[weapon.current_index] = roll
