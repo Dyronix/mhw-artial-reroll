@@ -27,6 +27,7 @@ from widgets.current_rolls_panel import CurrentRollsPanel
 from widgets.collapsible_panel import CollapsiblePanel
 from widgets.dashboard import Dashboard
 from widgets.roll_editor import RollEditorDialog
+from widgets.skill_encyclopedia_dialog import SkillEncyclopediaDialog
 from widgets.target_skills_dialog import TargetSkillsDialog
 from services.skill_display import SKILL_DISPLAY_MODES
 from app.app_info import APP_WINDOW_TITLE
@@ -56,6 +57,8 @@ class MainWindow(QMainWindow):
         self.create_button.clicked.connect(self.create_weapon)
         self.advance_button = QPushButton("Advance All Rolls")
         self.advance_button.clicked.connect(self.advance_rolls)
+        self.skill_encyclopedia_button = QPushButton("Skill Encyclopedia")
+        self.skill_encyclopedia_button.clicked.connect(self.open_skill_encyclopedia)
         self.development_button = QPushButton("Development Mode: Off")
         self.development_button.setCheckable(True)
         self.development_button.clicked.connect(self.toggle_development_mode)
@@ -68,6 +71,7 @@ class MainWindow(QMainWindow):
         header_layout.addLayout(title_block, 1)
         header_layout.addWidget(self.create_button)
         header_layout.addWidget(self.advance_button)
+        header_layout.addWidget(self.skill_encyclopedia_button)
         header_layout.addWidget(self.development_button)
 
         self.dev_banner = QLabel(
@@ -242,6 +246,9 @@ class MainWindow(QMainWindow):
             return
         advance_all(self.state)
         self.persist_and_refresh()
+
+    def open_skill_encyclopedia(self) -> None:
+        SkillEncyclopediaDialog(self.config, self).exec()
 
     def edit_weapon_rolls(self, weapon_id: str) -> None:
         weapon = next((item for item in self.state.tracked_weapons if item.id == weapon_id), None)

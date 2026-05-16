@@ -85,6 +85,7 @@ class AppConfig:
     ailments: list[Ailment]
     group_skills: list[Skill]
     set_bonus_skills: list[Skill]
+    skill_encyclopedia: list[Skill] = field(default_factory=list)
 
     @property
     def attributes(self) -> list[str]:

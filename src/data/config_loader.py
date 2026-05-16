@@ -18,6 +18,9 @@ def load_app_config(config_dir: Path) -> AppConfig:
         set_bonus_skills=[
             Skill(**item) for item in _read_list(config_dir / "set_bonus_skills.json")
         ],
+        skill_encyclopedia=[
+            Skill(**item) for item in _read_list(config_dir / "skill_encyclopedia.json")
+        ],
     )
 
 
