@@ -243,6 +243,21 @@ def apply_dracula_theme(app: QApplication) -> None:
             border: 1px solid {DRACULA["selection"]};
             border-radius: 8px;
         }}
+        QWidget[frameRole="inset"] {{
+            background: #21222c;
+            border: 1px solid {DRACULA["selection"]};
+            border-radius: 8px;
+        }}
+        QFrame[frameRole="currentRollItem"] {{
+            background: transparent;
+            border: 1px solid {DRACULA["selection"]};
+            border-radius: 8px;
+            padding: 4px;
+        }}
+        QFrame[frameRole="currentRollItem"]:hover {{
+            border-color: {DRACULA["purple"]};
+            background: rgba(68, 71, 90, 0.35);
+        }}
         QWidget[frameRole="foldoutContent"] {{
             background: transparent;
             border: 0;

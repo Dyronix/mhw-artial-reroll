@@ -28,6 +28,7 @@ from services.rolls import (
     accept_next_roll_for_weapon,
     add_weapon_after_craft,
     advance_all,
+    next_roll,
     reverse_all,
 )
 from widgets.create_weapon_dialog import CreateWeaponDialog
@@ -100,15 +101,15 @@ class MainWindow(QMainWindow):
         self.dev_banner.setVisible(False)
 
         self.dashboard = Dashboard()
-        self.dashboard.set_header_actions(self.create_button, self.advance_button)
+        self.dashboard.set_header_actions(self.create_button)
         self.dashboard.edit_requested.connect(self.edit_weapon_rolls)
-        self.dashboard.accept_next_requested.connect(self.accept_next_roll)
         self.dashboard.rename_requested.connect(self.rename_weapon)
         self.dashboard.current_skills_changed.connect(self.update_weapon_current_skills)
         self.dashboard.targets_requested.connect(self.edit_weapon_targets)
         self.dashboard.delete_requested.connect(self.delete_weapon)
 
-        self.current_panel = CurrentRollsPanel()
+        self.current_panel = CurrentRollsPanel(self.advance_button)
+        self.current_panel.accept_next_requested.connect(self.accept_next_roll)
         self.current_panel.setMinimumWidth(360)
 
         self.actions_panel = self._build_actions_panel()
@@ -338,6 +339,25 @@ class MainWindow(QMainWindow):
         weapon = self._find_weapon(weapon_id)
         if weapon is None:
             QMessageBox.warning(self, "Weapon Missing", "The selected weapon no longer exists.")
+            return
+        if next_roll(weapon) is None:
+            QMessageBox.information(
+                self,
+                "Next Roll Missing",
+                f"No recorded next roll is available for {weapon_display_name(self.state, weapon)}.",
+            )
+            return
+        response = QMessageBox.question(
+            self,
+            "Accept Next Skills?",
+            (
+                f"Accept the next recorded skills for {weapon_display_name(self.state, weapon)}?\n\n"
+                "This will advance that weapon to its next roll."
+            ),
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        if response != QMessageBox.Yes:
             return
         if not accept_next_roll_for_weapon(
             self.state,

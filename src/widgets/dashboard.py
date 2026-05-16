@@ -9,7 +9,6 @@ from widgets.weapon_row import WeaponRow
 
 class Dashboard(QFrame):
     edit_requested = Signal(str)
-    accept_next_requested = Signal(str)
     rename_requested = Signal(str, str)
     current_skills_changed = Signal(str, str, str)
     targets_requested = Signal(str)
@@ -67,7 +66,6 @@ class Dashboard(QFrame):
                     state.skill_display_mode,
                 )
                 row.edit_requested.connect(self.edit_requested.emit)
-                row.accept_next_requested.connect(self.accept_next_requested.emit)
                 row.rename_requested.connect(self.rename_requested.emit)
                 row.current_skills_changed.connect(self.current_skills_changed.emit)
                 row.targets_requested.connect(self.targets_requested.emit)

@@ -1,7 +1,17 @@
 from __future__ import annotations
 
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QVBoxLayout,
+    QWidget,
+)
 
 from data.models import AppState, RollResult, weapon_display_name
 from services.rolls import current_roll, next_roll
@@ -9,11 +19,24 @@ from widgets.weapon_icon_utils import load_attribute_icon, load_weapon_icon, ski
 
 
 class CurrentRollsPanel(QFrame):
-    def __init__(self, parent=None) -> None:
+    accept_next_requested = Signal(str)
+
+    def __init__(self, advance_button: QPushButton | None = None, parent=None) -> None:
         super().__init__(parent)
         self.setProperty("frameRole", "card")
-        self.content = QVBoxLayout()
+        self.rows_container = QWidget()
+        self.rows_container.setProperty("frameRole", "inset")
+        self.content = QVBoxLayout(self.rows_container)
+        self.content.setContentsMargins(12, 12, 12, 12)
         self.content.setSpacing(8)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidget(self.rows_container)
+
+        self.advance_button = advance_button or QPushButton("Advance All Rolls")
 
         title = QLabel("Current Active Rolls")
         title.setProperty("role", "section")
@@ -22,8 +45,8 @@ class CurrentRollsPanel(QFrame):
         layout.setContentsMargins(16, 14, 16, 16)
         layout.setSpacing(12)
         layout.addWidget(title)
-        layout.addLayout(self.content)
-        layout.addStretch(1)
+        layout.addWidget(scroll, 1)
+        layout.addWidget(self.advance_button, 0, Qt.AlignBottom)
 
     def set_state(self, state: AppState) -> None:
         while self.content.count():
@@ -34,16 +57,20 @@ class CurrentRollsPanel(QFrame):
         if not state.tracked_weapons:
             empty = QLabel("No tracked weapons")
             empty.setProperty("role", "muted")
+            empty.setAlignment(Qt.AlignCenter)
             self.content.addWidget(empty)
             return
 
         for weapon in state.tracked_weapons:
-            frame = QFrame()
-            frame.setStyleSheet("QFrame { background: transparent; }")
+            frame = _CurrentRollCard(weapon.id)
+            frame.setToolTip(
+                f"Accept the next recorded skills for {weapon_display_name(state, weapon)} and advance its roll."
+            )
+            frame.clicked.connect(self.accept_next_requested.emit)
             grid = QGridLayout(frame)
             grid.setContentsMargins(0, 6, 0, 6)
             grid.setHorizontalSpacing(12)
-            grid.setVerticalSpacing(4)
+            grid.setVerticalSpacing(6)
             header = QWidget()
             header_layout = QHBoxLayout(header)
             header_layout.setContentsMargins(0, 0, 0, 0)
@@ -64,6 +91,9 @@ class CurrentRollsPanel(QFrame):
             grid.addWidget(QLabel(_roll_summary(current_roll(weapon))), 1, 1)
             grid.addWidget(QLabel(f"Next #{weapon.current_index + 2}"), 2, 0)
             grid.addWidget(QLabel(_roll_summary(next_roll(weapon))), 2, 1)
+            hint = QLabel("Click card to accept next skills and advance")
+            hint.setProperty("role", "muted")
+            grid.addWidget(hint, 3, 0, 1, 2)
             grid.setColumnStretch(1, 1)
             self.content.addWidget(frame)
 
@@ -84,3 +114,18 @@ def _set_icon_label(label: QLabel, pixmap: QPixmap | None) -> None:
         label.clear()
         return
     label.setPixmap(pixmap)
+
+
+class _CurrentRollCard(QFrame):
+    clicked = Signal(str)
+
+    def __init__(self, weapon_id: str, parent=None) -> None:
+        super().__init__(parent)
+        self.weapon_id = weapon_id
+        self.setProperty("frameRole", "currentRollItem")
+        self.setCursor(Qt.PointingHandCursor)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if event.button() == Qt.LeftButton and self.rect().contains(event.position().toPoint()):
+            self.clicked.emit(self.weapon_id)
+        super().mouseReleaseEvent(event)

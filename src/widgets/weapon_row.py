@@ -25,7 +25,6 @@ from widgets.skill_entry_line_edit import SkillEntryLineEdit
 
 class WeaponRow(QFrame):
     edit_requested = Signal(str)
-    accept_next_requested = Signal(str)
     rename_requested = Signal(str, str)
     current_skills_changed = Signal(str, str, str)
     targets_requested = Signal(str)
@@ -104,8 +103,6 @@ class WeaponRow(QFrame):
 
         edit_button = _icon_button("edit_rolls", "Edit rolls")
         edit_button.clicked.connect(lambda: self.edit_requested.emit(self.weapon.id))
-        accept_next_button = _icon_button("accept_next_roll", "Accept next skills and advance all")
-        accept_next_button.clicked.connect(lambda: self.accept_next_requested.emit(self.weapon.id))
         targets_button = _icon_button("targets", "Target skills")
         targets_button.clicked.connect(lambda: self.targets_requested.emit(self.weapon.id))
         delete_button = _icon_button("delete_weapon", "Delete weapon")
@@ -114,7 +111,6 @@ class WeaponRow(QFrame):
         actions = QHBoxLayout()
         actions.setSpacing(8)
         actions.addWidget(edit_button)
-        actions.addWidget(accept_next_button)
         actions.addWidget(targets_button)
         actions.addWidget(delete_button)
 
