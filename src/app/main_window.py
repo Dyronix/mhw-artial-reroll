@@ -21,7 +21,12 @@ from services.roll_import_service import (
     import_prerecorded_weapon,
     preview_merge,
 )
-from services.rolls import accept_next_roll_for_weapon, add_weapon_after_craft, advance_all
+from services.rolls import (
+    accept_next_roll_for_weapon,
+    add_weapon_after_craft,
+    advance_all,
+    reverse_all,
+)
 from widgets.create_weapon_dialog import CreateWeaponDialog
 from widgets.current_rolls_panel import CurrentRollsPanel
 from widgets.collapsible_panel import CollapsiblePanel
@@ -122,6 +127,8 @@ class MainWindow(QMainWindow):
         content = QWidget()
         self.add_prerecorded_button = QPushButton("Add Prerecorded Weapon")
         self.add_prerecorded_button.clicked.connect(self.add_prerecorded_weapon)
+        self.reverse_rolls_button = QPushButton("Reverse Roll Progress")
+        self.reverse_rolls_button.clicked.connect(self.reverse_rolls)
         self.clear_all_button = QPushButton("Clear All Weapons")
         self.clear_all_button.clicked.connect(self.clear_all_weapons)
 
@@ -139,6 +146,7 @@ class MainWindow(QMainWindow):
         layout.setSpacing(10)
         layout.addWidget(self.actions_mode_note)
         layout.addWidget(self.add_prerecorded_button)
+        layout.addWidget(self.reverse_rolls_button)
         layout.addWidget(self.clear_all_button)
         layout.addWidget(dev_note)
         return CollapsiblePanel("Actions / Tools", content, expanded=False)
@@ -267,6 +275,26 @@ class MainWindow(QMainWindow):
         if not self.state.tracked_weapons:
             return
         advance_all(self.state)
+        self.persist_and_refresh()
+
+    def reverse_rolls(self) -> None:
+        if not self.development_mode:
+            QMessageBox.information(
+                self,
+                "Development Mode Required",
+                "Enable Development Mode before reversing roll progress.",
+            )
+            return
+        if not self.state.roll_history:
+            return
+        if not reverse_all(self.state):
+            QMessageBox.warning(
+                self,
+                "Reverse Unavailable",
+                "The most recent history snapshot no longer matches the tracked weapons. "
+                "Reverse roll progress is only available while the same weapon set is still tracked.",
+            )
+            return
         self.persist_and_refresh()
 
     def open_skill_encyclopedia(self) -> None:
@@ -473,6 +501,8 @@ class MainWindow(QMainWindow):
         self.dev_banner.setVisible(self.development_mode)
         self.actions_panel.setVisible(self.development_mode)
         self.actions_panel.set_content_enabled(self.development_mode)
+        can_reverse_rolls = self.development_mode and self._can_reverse_rolls()
+        self.reverse_rolls_button.setEnabled(can_reverse_rolls)
         self.clear_all_button.setEnabled(self.development_mode and bool(self.state.tracked_weapons))
         self.actions_mode_note.setText(
             "Development Mode is on. Manual additions here will not advance global roll indexes."
@@ -489,3 +519,10 @@ class MainWindow(QMainWindow):
         blocked = self.skill_display_combo.blockSignals(True)
         self.skill_display_combo.setCurrentIndex(index)
         self.skill_display_combo.blockSignals(blocked)
+
+    def _can_reverse_rolls(self) -> bool:
+        if not self.state.roll_history:
+            return False
+        current_ids = {weapon.id for weapon in self.state.tracked_weapons}
+        snapshot_ids = {weapon.weapon_id for weapon in self.state.roll_history[-1].weapons}
+        return bool(current_ids) and current_ids == snapshot_ids

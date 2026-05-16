@@ -10,6 +10,30 @@ def advance_all(state: AppState, action: str = "Advanced all rolls") -> None:
         weapon.current_index += 1
 
 
+def reverse_all(state: AppState) -> bool:
+    if not state.roll_history:
+        return False
+
+    entry = state.roll_history[-1]
+    current_ids = {weapon.id for weapon in state.tracked_weapons}
+    snapshot_ids = {weapon.weapon_id for weapon in entry.weapons}
+    if current_ids != snapshot_ids:
+        return False
+
+    weapons_by_id = {weapon.id: weapon for weapon in state.tracked_weapons}
+    for snapshot in entry.weapons:
+        weapon = weapons_by_id.get(snapshot.weapon_id)
+        if weapon is None:
+            return False
+        weapon.current_index = max(0, snapshot.roll_index)
+        weapon.current_set_bonus_skill = snapshot.roll.set_bonus_skill
+        weapon.current_group_skill = snapshot.roll.group_skill
+
+    state.roll_history.pop()
+    state.next_history_sequence = max(1, entry.sequence)
+    return True
+
+
 def accept_next_roll_for_weapon(
     state: AppState,
     weapon: TrackedWeapon,
