@@ -13,16 +13,16 @@ logger = logging.getLogger(__name__)
 
 FONT_AWESOME = {
     "edit_rolls": "fa5s.edit",
-    "accept_next_roll": "fa5s.check",
-    "targets": "fa5s.bullseye",
-    "clear_rolls": "fa5s.eraser",
+    "accept_next_roll": "fa5s.step-forward",
+    "targets": "fa5s.crosshairs",
+    "clear_rolls": "fa5s.undo-alt",
     "delete_weapon": "fa5s.trash-alt",
 }
 
 FALLBACK_STANDARD_ICONS = {
     "edit_rolls": QStyle.StandardPixmap.SP_FileDialogDetailedView,
-    "accept_next_roll": QStyle.StandardPixmap.SP_DialogApplyButton,
-    "targets": QStyle.StandardPixmap.SP_DialogApplyButton,
+    "accept_next_roll": QStyle.StandardPixmap.SP_MediaSkipForward,
+    "targets": QStyle.StandardPixmap.SP_FileDialogContentsView,
     "clear_rolls": QStyle.StandardPixmap.SP_DialogResetButton,
     "delete_weapon": QStyle.StandardPixmap.SP_TrashIcon,
 }
