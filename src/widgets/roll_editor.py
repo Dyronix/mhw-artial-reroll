@@ -127,7 +127,7 @@ class SkillLineEdit(QLineEdit):
             return True
         return False
 
-    def select_next_completion(self) -> bool:
+    def select_completion(self, step: int) -> bool:
         completer = self.completer()
         if completer is None:
             return False
@@ -145,9 +145,9 @@ class SkillLineEdit(QLineEdit):
             completer.complete()
 
         current = popup.currentIndex()
-        next_row = 0
+        next_row = 0 if step > 0 else count - 1
         if current.isValid():
-            next_row = (current.row() + 1) % count
+            next_row = (current.row() + step) % count
         index = completer.completionModel().index(next_row, 0)
         popup.setCurrentIndex(index)
         return True
@@ -159,8 +159,9 @@ class SkillLineEdit(QLineEdit):
             self.table.setCurrentCell(self.row, min(self.col + 1, self.table.columnCount() - 1))
             self.table.cellWidget(self.row, self.table.currentColumn()).setFocus()
             return
-        if event.key() == Qt.Key_Tab and self.completion_count_for_text() > 1:
-            if self.select_next_completion():
+        if event.key() in (Qt.Key_Tab, Qt.Key_Backtab) and self.completion_count_for_text() > 0:
+            step = -1 if event.key() == Qt.Key_Backtab else 1
+            if self.select_completion(step):
                 return
         if event.key() == Qt.Key_Right:
             self.table.setCurrentCell(self.row, min(self.col + 1, self.table.columnCount() - 1))
@@ -183,10 +184,11 @@ class SkillLineEdit(QLineEdit):
     def event(self, event) -> bool:
         if (
             event.type() == QEvent.KeyPress
-            and event.key() == Qt.Key_Tab
-            and self.completion_count_for_text() > 1
+            and event.key() in (Qt.Key_Tab, Qt.Key_Backtab)
+            and self.completion_count_for_text() > 0
         ):
-            return self.select_next_completion()
+            step = -1 if event.key() == Qt.Key_Backtab else 1
+            return self.select_completion(step)
         return super().event(event)
 
     def _display_for_text(self, text: str) -> str | None:
