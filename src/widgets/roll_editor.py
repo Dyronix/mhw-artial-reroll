@@ -240,12 +240,15 @@ class RollEditorDialog(QDialog):
 
         resize_button = QPushButton("Apply Roll Count")
         resize_button.clicked.connect(lambda: self.rebuild_table(self.roll_count.value()))
+        clear_button = QPushButton("Clear Rolls")
+        clear_button.clicked.connect(self.clear_rolls)
 
         controls = QHBoxLayout()
         controls.setSpacing(10)
         controls.addWidget(QLabel("Roll slots"))
         controls.addWidget(self.roll_count)
         controls.addWidget(resize_button)
+        controls.addWidget(clear_button)
         controls.addStretch(1)
         if manual_mode:
             note = QLabel("Development Mode: saving does not advance global progression.")
@@ -321,6 +324,19 @@ class RollEditorDialog(QDialog):
             return
         self.weapon.rolls = rolls
         super().accept()
+
+    def clear_rolls(self) -> None:
+        for col in range(self.table.columnCount()):
+            set_widget = self.table.cellWidget(0, col)
+            if isinstance(set_widget, QLineEdit):
+                set_widget.clear()
+            group_widget = self.table.cellWidget(1, col)
+            if isinstance(group_widget, QLineEdit):
+                group_widget.clear()
+            checkbox = self._checkbox(col)
+            if checkbox is not None:
+                checkbox.setChecked(False)
+                checkbox.setEnabled(False)
 
     def _collect_rolls(self, confirm_blanks: bool) -> list[RollResult] | None:
         if self.table.columnCount() == 0:

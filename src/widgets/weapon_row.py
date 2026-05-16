@@ -27,7 +27,6 @@ class WeaponRow(QFrame):
     rename_requested = Signal(str, str)
     current_skills_changed = Signal(str, str, str)
     targets_requested = Signal(str)
-    clear_requested = Signal(str)
     delete_requested = Signal(str)
 
     def __init__(
@@ -96,8 +95,6 @@ class WeaponRow(QFrame):
         accept_next_button.clicked.connect(lambda: self.accept_next_requested.emit(self.weapon.id))
         targets_button = _icon_button("targets", "Target skills")
         targets_button.clicked.connect(lambda: self.targets_requested.emit(self.weapon.id))
-        clear_button = _icon_button("clear_rolls", "Clear rolls")
-        clear_button.clicked.connect(lambda: self.clear_requested.emit(self.weapon.id))
         delete_button = _icon_button("delete_weapon", "Delete weapon")
         delete_button.clicked.connect(lambda: self.delete_requested.emit(self.weapon.id))
 
@@ -106,7 +103,6 @@ class WeaponRow(QFrame):
         actions.addWidget(edit_button)
         actions.addWidget(accept_next_button)
         actions.addWidget(targets_button)
-        actions.addWidget(clear_button)
         actions.addWidget(delete_button)
 
         top = QGridLayout()

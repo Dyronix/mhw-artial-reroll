@@ -106,7 +106,6 @@ class MainWindow(QMainWindow):
         self.dashboard.rename_requested.connect(self.rename_weapon)
         self.dashboard.current_skills_changed.connect(self.update_weapon_current_skills)
         self.dashboard.targets_requested.connect(self.edit_weapon_targets)
-        self.dashboard.clear_requested.connect(self.clear_weapon_rolls)
         self.dashboard.delete_requested.connect(self.delete_weapon)
 
         self.current_panel = CurrentRollsPanel()
@@ -388,24 +387,6 @@ class MainWindow(QMainWindow):
         dialog.setWindowTitle(f"Target Skills - {weapon_display_name(self.state, weapon)}")
         if dialog.exec() == QDialog.Accepted:
             self.persist_and_refresh()
-
-    def clear_weapon_rolls(self, weapon_id: str) -> None:
-        weapon = self._find_weapon(weapon_id)
-        if weapon is None:
-            QMessageBox.warning(self, "Weapon Missing", "The selected weapon no longer exists.")
-            return
-        response = QMessageBox.warning(
-            self,
-            "Clear Weapon Rolls",
-            f"Clear all recorded rolls for {weapon_display_name(self.state, weapon)}?\n\n"
-            "The weapon will remain tracked and its current index will be kept.",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
-        )
-        if response != QMessageBox.Yes:
-            return
-        weapon.rolls.clear()
-        self.persist_and_refresh()
 
     def delete_weapon(self, weapon_id: str) -> None:
         weapon = self._find_weapon(weapon_id)

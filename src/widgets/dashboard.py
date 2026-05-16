@@ -13,7 +13,6 @@ class Dashboard(QFrame):
     rename_requested = Signal(str, str)
     current_skills_changed = Signal(str, str, str)
     targets_requested = Signal(str)
-    clear_requested = Signal(str)
     delete_requested = Signal(str)
 
     def __init__(self, parent=None) -> None:
@@ -72,7 +71,6 @@ class Dashboard(QFrame):
                 row.rename_requested.connect(self.rename_requested.emit)
                 row.current_skills_changed.connect(self.current_skills_changed.emit)
                 row.targets_requested.connect(self.targets_requested.emit)
-                row.clear_requested.connect(self.clear_requested.emit)
                 row.delete_requested.connect(self.delete_requested.emit)
                 self.rows_layout.addWidget(row)
             self.rows_layout.addStretch(1)
