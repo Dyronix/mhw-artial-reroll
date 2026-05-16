@@ -235,7 +235,7 @@ class RollEditorDialog(QDialog):
         self.roll_count.setRange(1, 250)
         self.roll_count.setButtonSymbols(QAbstractSpinBox.PlusMinus)
         self.roll_count.setKeyboardTracking(False)
-        self.roll_count.setValue(max(20, len(weapon.rolls), weapon.current_index + 2))
+        self.roll_count.setValue(_initial_roll_count(weapon))
         self.roll_count.valueChanged.connect(self.rebuild_table)
         self.roll_count.apply_requested.connect(self.rebuild_table)
 
@@ -451,3 +451,9 @@ class RollEditorDialog(QDialog):
             QMessageBox.No,
         )
         return response == QMessageBox.Yes
+
+
+def _initial_roll_count(weapon: TrackedWeapon) -> int:
+    if weapon.rolls:
+        return len(weapon.rolls)
+    return max(20, weapon.current_index + 2)

@@ -77,25 +77,6 @@ def set_rolls(weapon: TrackedWeapon, rolls: list[RollResult]) -> None:
     weapon.rolls = rolls
     if weapon.current_index < 0:
         weapon.current_index = 0
-    weapon.current_index = _aligned_current_index(weapon)
-
-
-def _aligned_current_index(weapon: TrackedWeapon) -> int:
-    if not weapon.rolls:
-        return 0
-
-    current_roll = RollResult(
-        set_bonus_skill=weapon.current_set_bonus_skill,
-        group_skill=weapon.current_group_skill,
-    )
-    for index, roll in enumerate(weapon.rolls):
-        if (
-            roll.set_bonus_skill == current_roll.set_bonus_skill
-            and roll.group_skill == current_roll.group_skill
-        ):
-            return index
-
-    return 0
 
 
 def set_current_roll(weapon: TrackedWeapon, roll: RollResult) -> None:
