@@ -3,6 +3,8 @@ from __future__ import annotations
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication
 
+from app.path_utils import asset_path
+
 
 DRACULA = {
     "background": "#282a36",
@@ -21,6 +23,9 @@ DRACULA = {
 
 
 def apply_dracula_theme(app: QApplication) -> None:
+    spinbox_plus_icon = asset_path("icons", "ui", "spinbox_plus.svg").as_posix()
+    spinbox_minus_icon = asset_path("icons", "ui", "spinbox_minus.svg").as_posix()
+
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(DRACULA["background"]))
     palette.setColor(QPalette.WindowText, QColor(DRACULA["foreground"]))
@@ -143,6 +148,42 @@ def apply_dracula_theme(app: QApplication) -> None:
         QComboBox::drop-down {{
             border: 0;
             width: 24px;
+        }}
+        QSpinBox {{
+            padding-right: 28px;
+            min-width: 72px;
+        }}
+        QSpinBox::up-button {{
+            subcontrol-origin: padding;
+            subcontrol-position: top right;
+            width: 24px;
+            height: 14px;
+            border-left: 1px solid {DRACULA["selection"]};
+            border-top-right-radius: 5px;
+            background: {DRACULA["panel_alt"]};
+        }}
+        QSpinBox::down-button {{
+            subcontrol-origin: padding;
+            subcontrol-position: bottom right;
+            width: 24px;
+            height: 14px;
+            border-left: 1px solid {DRACULA["selection"]};
+            border-top: 1px solid {DRACULA["selection"]};
+            border-bottom-right-radius: 5px;
+            background: {DRACULA["panel_alt"]};
+        }}
+        QSpinBox::up-button:hover, QSpinBox::down-button:hover {{
+            background: {DRACULA["selection"]};
+        }}
+        QSpinBox::up-arrow {{
+            image: url("{spinbox_plus_icon}");
+            width: 10px;
+            height: 10px;
+        }}
+        QSpinBox::down-arrow {{
+            image: url("{spinbox_minus_icon}");
+            width: 10px;
+            height: 10px;
         }}
         QHeaderView::section {{
             background: {DRACULA["panel"]};

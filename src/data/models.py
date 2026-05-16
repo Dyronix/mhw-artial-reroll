@@ -39,14 +39,18 @@ class RollResult:
 
 
 @dataclass
+class TargetRule:
+    set_bonus_skill: str = "0"
+    group_skill: str = "0"
+
+
+@dataclass
 class TrackedWeapon:
     weapon_type: str
     attribute: str
     current_index: int = 0
     rolls: list[RollResult] = field(default_factory=list)
-    target_set_bonus_skills: list[str] = field(default_factory=list)
-    target_group_skills: list[str] = field(default_factory=list)
-    target_match_mode: str = "any"
+    target_rules: list[TargetRule] = field(default_factory=list)
     id: str = field(default_factory=lambda: uuid4().hex)
 
     @property
@@ -108,9 +112,7 @@ def weapon_from_dict(data: dict[str, Any]) -> TrackedWeapon:
         attribute=str(data.get("attribute", "")),
         current_index=max(0, int(data.get("current_index", 0) or 0)),
         rolls=rolls,
-        target_set_bonus_skills=_clean_skill_list(data.get("target_set_bonus_skills", [])),
-        target_group_skills=_clean_skill_list(data.get("target_group_skills", [])),
-        target_match_mode=_clean_match_mode(data.get("target_match_mode", "any")),
+        target_rules=_clean_target_rule_list(data.get("target_rules", [])),
     )
 
 
@@ -166,20 +168,21 @@ def _clean_skill(value: Any) -> str:
     return text if text else "0"
 
 
-def _clean_skill_list(value: Any) -> list[str]:
+def _clean_target_rule_list(value: Any) -> list[TargetRule]:
     if not isinstance(value, list):
         return []
-    skills: list[str] = []
-    seen: set[str] = set()
+    rules: list[TargetRule] = []
+    seen: set[tuple[str, str]] = set()
     for item in value:
-        skill = _clean_skill(item)
-        key = skill.casefold()
-        if skill != "0" and key not in seen:
-            skills.append(skill)
-            seen.add(key)
-    return skills
-
-
-def _clean_match_mode(value: Any) -> str:
-    mode = str(value or "any").strip().casefold()
-    return mode if mode in {"any", "all"} else "any"
+        if not isinstance(item, dict):
+            continue
+        set_bonus_skill = _clean_skill(item.get("set_bonus_skill"))
+        group_skill = _clean_skill(item.get("group_skill"))
+        if set_bonus_skill == "0" and group_skill == "0":
+            continue
+        key = (set_bonus_skill.casefold(), group_skill.casefold())
+        if key in seen:
+            continue
+        rules.append(TargetRule(set_bonus_skill, group_skill))
+        seen.add(key)
+    return rules

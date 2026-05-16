@@ -61,7 +61,7 @@ class WeaponRow(QFrame):
 
     def refresh(self) -> None:
         self.title.setText(self.weapon.display_name)
-        self.index_label.setText(f"Current roll index: {self.weapon.current_index}")
+        self.index_label.setText(f"Current roll index: {self.weapon.current_index + 1}")
         self.targets_label.setText(target_summary(self.weapon))
         self.strip.set_weapon(self.weapon, self.config)
 

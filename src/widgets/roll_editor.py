@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from PySide6.QtCore import QEvent, Qt
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QKeyEvent, QMouseEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QAbstractSpinBox,
     QCheckBox,
     QCompleter,
     QDialog,
@@ -192,6 +193,20 @@ class SkillLineEdit(QLineEdit):
         return self.normalized_aliases.get(text.strip().casefold())
 
 
+class RollCountSpinBox(QSpinBox):
+    apply_requested = Signal(int)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            previous_value = self.value()
+            self.interpretText()
+            if self.value() == previous_value:
+                self.apply_requested.emit(self.value())
+            event.accept()
+            return
+        super().keyPressEvent(event)
+
+
 class RollEditorDialog(QDialog):
     def __init__(
         self,
@@ -213,10 +228,13 @@ class RollEditorDialog(QDialog):
         self.setWindowTitle(f"{mode_label} - {weapon.display_name}")
         self.resize(1120, 420)
 
-        self.roll_count = QSpinBox()
+        self.roll_count = RollCountSpinBox()
         self.roll_count.setRange(1, 250)
+        self.roll_count.setButtonSymbols(QAbstractSpinBox.PlusMinus)
+        self.roll_count.setKeyboardTracking(False)
         self.roll_count.setValue(max(20, len(weapon.rolls), weapon.current_index + 2))
         self.roll_count.valueChanged.connect(self.rebuild_table)
+        self.roll_count.apply_requested.connect(self.rebuild_table)
 
         resize_button = QPushButton("Apply Roll Count")
         resize_button.clicked.connect(lambda: self.rebuild_table(self.roll_count.value()))
@@ -260,7 +278,7 @@ class RollEditorDialog(QDialog):
 
         self.table.clearContents()
         self.table.setColumnCount(count)
-        self.table.setHorizontalHeaderLabels([str(index) for index in range(count)])
+        self.table.setHorizontalHeaderLabels([str(index + 1) for index in range(count)])
 
         set_skills, set_aliases = skill_completion_options(
             self.config.set_bonus_skills,

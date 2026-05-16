@@ -97,7 +97,7 @@ def _roll_title(index: int, highlighted: bool, is_current: bool, is_history: boo
         marker = "Past"
     else:
         marker = "Roll"
-    return f"{marker} #{index}"
+    return f"{marker} #{index + 1}"
 
 
 def _roll_details(roll) -> str:
