@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from data.models import AppConfig, RollResult, TrackedWeapon
+from services.rolls import set_rolls
 from services.skill_display import skill_completion_options
 
 
@@ -322,7 +323,7 @@ class RollEditorDialog(QDialog):
             return
         if not self._confirm_destructive_changes(rolls):
             return
-        self.weapon.rolls = rolls
+        set_rolls(self.weapon, rolls)
         super().accept()
 
     def clear_rolls(self) -> None:

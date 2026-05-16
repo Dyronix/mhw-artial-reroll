@@ -22,6 +22,7 @@ class CreateWeaponDialog(QDialog):
         config: AppConfig,
         parent=None,
         manual_mode: bool = False,
+        advances_roll_state: bool = False,
         skill_display_mode: str = "source",
     ) -> None:
         super().__init__(parent)
@@ -60,6 +61,20 @@ class CreateWeaponDialog(QDialog):
             description = QLabel(
                 "Manual development-mode additions do not advance global roll state."
             )
+            description.setProperty("role", "muted")
+            description.setWordWrap(True)
+            layout.addWidget(description)
+        else:
+            if advances_roll_state:
+                description = QLabel(
+                    "This records a newly crafted weapon and advances global roll progress for "
+                    "all currently tracked weapons."
+                )
+            else:
+                description = QLabel(
+                    "This adds your first tracked weapon. With no existing data, it does not "
+                    "advance any roll progress."
+                )
             description.setProperty("role", "muted")
             description.setWordWrap(True)
             layout.addWidget(description)

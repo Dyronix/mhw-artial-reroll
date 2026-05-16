@@ -191,6 +191,7 @@ class MainWindow(QMainWindow):
         dialog = CreateWeaponDialog(
             self.config,
             self,
+            advances_roll_state=bool(self.state.tracked_weapons),
             skill_display_mode=self.state.skill_display_mode,
         )
         if dialog.exec() != QDialog.Accepted:
@@ -499,6 +500,13 @@ class MainWindow(QMainWindow):
     def refresh(self) -> None:
         self.dashboard.set_state(self.state, self.config)
         self.current_panel.set_state(self.state)
+        has_tracked_weapons = bool(self.state.tracked_weapons)
+        self.create_button.setText("Add First Weapon" if not has_tracked_weapons else "Record Crafted Weapon")
+        self.create_button.setToolTip(
+            "Create the first tracked weapon without advancing any roll state."
+            if not has_tracked_weapons
+            else "Record a newly crafted weapon and advance global roll progress."
+        )
         self.dev_banner.setVisible(self.development_mode)
         self.actions_panel.setVisible(self.development_mode)
         self.actions_panel.set_content_enabled(self.development_mode)
